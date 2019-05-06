@@ -37,4 +37,4 @@ This is the list of future changes:
 
 ## Authors
 
-* **Peyton Creery** - *Initial work* - [Twinsphotography](https://twinsphotography.net)
+* **Peyton Creery** - *Initial work* - [Website](https://twinsphotography.net)
