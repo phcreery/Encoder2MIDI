@@ -27,7 +27,7 @@ Lighroom uses the MIDI2LR Plug-in
 
 (todo)
 
-## ToDo
+## Goals
 This is the list of future changes:
 
  - [ ] Clean Up code to smooth adaptivity (ex. allow more than 2 MCP devices and more encoders)
