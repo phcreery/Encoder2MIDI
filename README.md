@@ -30,9 +30,12 @@ Lighroom uses the MIDI2LR Plug-in
 ## Goals
 This is the list of future changes:
 
- - [ ] Send MIDI commands
+ - [X] Send MIDI commands
  - [ ] Clean Up code to smooth adaptivity (ex. allow more than 2 MCP devices and more encoders)
  - [x] Use interrupts instead of constantly checking. This will allow smoother input and is just proper programming
+ - [ ] Bottons - Short, Long, Hold and turn.
+ - [ ] LEDs
+ - [ ] Banks
 
 
 
