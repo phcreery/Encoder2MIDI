@@ -40,31 +40,17 @@ unsigned long keyValue1 = 0;
 //boolean change=false;                // goes true when a change in the encoder state is detected
 int butPress = 101;                  // stores which button has been pressed
 int encSelect[3] = {101, 101, 0};    // stores the last encoder used and direction {mcpX, encNo, 1=CW or 2=CCW}
-unsigned long currentTime;
-unsigned long loopTime;
+//unsigned long currentTime;
+//unsigned long loopTime;
 
 const int encCount = 9;  // number of rotary encoders
-//const int encCount1 = 1;  // number of rotary encoders
-
-//const int encPin[encCount];  
-//const int encPins1[encCount1][2] = {
-//  {0,1}   // enc:0 AA GPA0,GPA1 - pins 21/22 on mcp1
-//};  
-
 
 int encPos[encCount];
-//int encPos1[encCount1];
 
 const int butCount0 = 0;  // number of buttons
 const int butCount1 = 9;  // number of buttons
 const int butPins0[butCount0] = {};
 const int butPins1[butCount1] = { 2,3,4,5,6,7,8,9,10 };
-
-// arrays to store the previous value of the encoders and buttons
-//unsigned char encoders0[encCount0];
-//unsigned char encoders1[encCount1];
-//unsigned char buttons0[butCount0];
-//unsigned char buttons1[butCount1];
 
 // Interrupts from the MCP will be handled by this PIN on Arduino
 byte arduinoIntPin0 = 0;
@@ -79,6 +65,10 @@ volatile boolean awakenByInterrupt1 = false;
 
 int led = 17;
 
+int minval = 1;
+int maxval = 127;
+
+int debounce = 30;
 
 
 // #################### FUNCTIONS ####################
@@ -104,10 +94,6 @@ unsigned int expanderRead(const byte reg, unsigned char addrX) {
 
 
 
-
-
-
-
 void controlChange(byte channel, byte control, byte value) {
   midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
   MidiUSB.sendMIDI(event);
@@ -120,6 +106,7 @@ void noteOn(byte channel, byte pitch, byte velocity) {
 
 void noteOff(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOff = {0x08, 0x80 | channel, pitch, velocity};
+  //midiEventPacket_t noteOff = {0x08 | channel, pitch, velocity};
   MidiUSB.sendMIDI(noteOff);
 }
 
@@ -199,12 +186,13 @@ void intCallBack1() {
   awakenByInterrupt1 = true;
 }
 
+
 void handleInterrupt0() {
   // disable interrupts while handling them.
   detachInterrupt(arduinoInterrupt0);
   detachInterrupt(arduinoInterrupt1);
 
-  delay (50);  // de-bounce before we re-enable interrupts
+  delay (debounce);  // de-bounce before we re-enable interrupts
 
   digitalWrite(led, !digitalRead(led));
   // check the encoders and buttons every 1 millis for debounce
@@ -236,22 +224,24 @@ void handleInterrupt0() {
         encSelect[0] = 0;
         encSelect[1] = 1;
         encSelect[2] = round(button/2-0.01);
-        encPos[encSelect[2]] ++;
+        //encPos[encSelect[2]] ++;
+        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);
+        encPos[encSelect[2]] = 1;
+        break;
       } else {
         //Serial.print("CCW ");
         encSelect[0] = 0;
         encSelect[1] = 2;
         encSelect[2] = round(button/2-0.01);
-        encPos[encSelect[2]] ++;
+        //encPos[encSelect[2]] --;
+        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);
+        encPos[encSelect[2]] = 127;
+        break;
       }
     } else {
-      //Serial.print (". ");
     
     } // end of for each button
   }
-  //for(int i = 0; i < 3; i++)  Serial.print(encSelect[i]);
-  //Serial.print(encPos[encSelect[2]]);
-  //Serial.println();
   
  
   cleanInterrupts();
@@ -267,7 +257,7 @@ void handleInterrupt1() {
   detachInterrupt(arduinoInterrupt0);
   detachInterrupt(arduinoInterrupt1);
 
-  delay (50);  // de-bounce before we re-enable interrupts
+  delay (debounce);  // de-bounce before we re-enable interrupts
 
   digitalWrite(led, !digitalRead(led));
   // check the encoders and buttons every 1 millis for debounce
@@ -289,6 +279,7 @@ void handleInterrupt1() {
   //Serial.print("MCP1 ");
   //Serial.print(sizeof(long));
   //Serial.print(keyValue1);
+  //uint8_t encPos[2];
   for (byte button = 0; button < 16; button++)
     {
     // this key down?
@@ -300,29 +291,28 @@ void handleInterrupt1() {
         //Serial.print("CW ");
         encSelect[0] = 1;
         encSelect[1] = 1;
-        encSelect[2] = round(button/2-0.01)+8;
-        encPos[encSelect[2]] ++;
+        encSelect[2] = round(button/2-0.01)+5;
+        //encPos[encSelect[2]] ++;                                                            //absolute
+        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);             //absolute constrain
+        encPos[encSelect[2]] = 1;                                                            //twos compiment
+        break;
       } else {
         //Serial.print("CCW ");
         encSelect[0] = 1;
         encSelect[1] = 2;
-        encSelect[2] = round(button/2-0.01)+8;
-        encPos[encSelect[2]] --;
+        encSelect[2] = round(button/2-0.01)+5;
+        //encPos[encSelect[2]] --;                                                             //absolute
+        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);              //absolute boundaries
+        encPos[encSelect[2]] = 127;                                                             //twos compliment
+        break;
       }
     } else {
-      //Serial.print (". ");
     
     }
     
     // end of for each button
   }
-  
-  //for(int i = 0; i < 3; i++)  Serial.print(encSelect[i]);
-  //Serial.print(encPos[encSelect[2]]);
-  //Serial.print(encSelect);
-  //Serial.println();
-  
- 
+
   cleanInterrupts();
   keyValue1 = 0;
   
@@ -337,27 +327,31 @@ void cleanInterrupts() {
   awakenByInterrupt1 = false;
 }
 
-/*
-void handleMidi() {
 
-  //encPos[encCount]
-  controlChange(byte channel, byte control, byte value)
+void handleMidi() {
+  controlChange(1, encSelect[2], encPos[encSelect[2]]);
+  MidiUSB.flush();
 }
   
-}
-*/
+
 
 void loop() {
   if (awakenByInterrupt0){
-    //Serial.println("Interrupted0...");
+    Serial.println("Interrupted0...");
     handleInterrupt0();
-    controlChange(1, encSelect[2], 1);
-    MidiUSB.flush();
+    handleMidi();
+    //Serial.print(encSelect[2]);
+    //Serial.print("  ");
+    //Serial.println(encPos[encSelect[2]]);
     //Serial.println("Handled");
   }
   if (awakenByInterrupt1){
-    //Serial.println("Interrupted1...");
+    Serial.println("Interrupted1...");
     handleInterrupt1();
+    handleMidi();
+    //Serial.print(encSelect[2]);
+    //Serial.print("  ");
+    //Serial.println(encPos[encSelect[2]]);
     //Serial.println("Handled");
   }
 
