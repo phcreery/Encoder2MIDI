@@ -32,10 +32,10 @@ This is the list of future changes:
 
  - [X] Send MIDI commands
  - [ ] Clean Up code to smooth adaptivity (ex. allow more than 2 MCP devices and more encoders)
- - [x] Use interrupts instead of constantly checking. This will allow smoother input and is just proper programming
- - [ ] Bottons - Short, Long, Hold and turn.
+ - [x] Use interrupts instead of pooling. This will allow smoother input and less power usage
+ - [ ] Bottons - Short, Long, Double, Press & Turn.
  - [ ] LEDs
- - [ ] Banks
+ - [ ] Banks/Modes
 
 
 
