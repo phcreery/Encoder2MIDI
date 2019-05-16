@@ -5,6 +5,10 @@ Use Rotary Encoders to control Lightroom via Arduino and MIDI connection
 
 This is created to use several rotary encoders as contoller knobs to adjust lightroom sliders
 
+### How it works
+
+Rotary Encoder/Button > Arduino > MIDI signal over USB > MIDI2LR Plugin > Lightroom
+
 ### Hardware
 
 Tested:
