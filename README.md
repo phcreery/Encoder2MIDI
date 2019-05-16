@@ -1,5 +1,5 @@
 # Encoder2MIDI-Lightoom-Controller
-Use Rotary Encoders to control Lightroom via Arduino and MIDI connection
+Use Rotary Encoders to control Lightroom (or anything) via Arduino and MIDI connection
 
 ## Getting Started
 
