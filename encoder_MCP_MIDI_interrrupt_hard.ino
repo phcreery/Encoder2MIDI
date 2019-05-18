@@ -30,6 +30,7 @@
 #define OLLATA   0x14   // Output latch. Write to latch output.
 #define OLLATB   0x15
 
+int addr = 0x00;
 #define addr0 0x20
 #define addr1 0x21
 
@@ -38,17 +39,24 @@ unsigned long keyValue0 = 0;
 unsigned long keyValue1 = 0;
 
 //boolean change=false;                // goes true when a change in the encoder state is detected
-int butPress = 101;                  // stores which button has been pressed
-int encSelect[3] = {101, 101, 0};    // stores the last encoder used and direction {mcpX, encNo, 1=CW or 2=CCW}
-//unsigned long currentTime;
-//unsigned long loopTime;
+int butPress = 101;                    // stores which button has been pressed
+int encSelect[3] = {101, 101, 0};      // stores the last encoder used and direction {mcpX, encNo, 1=CW or 127=CCW}
+int encValArray[3] = {0,0,0};
+int encCWArray[3] = {127,1,1};
+bool encCWArrayComp = false;
+int encCCWArray[3] = {1,1,127};
+bool encCCWArrayComp = false;
+
+
+int encseladd = 0;
+int numbuttons = 0;
 
 const int encCount = 9;  // number of rotary encoders
 
 int encPos[encCount];
 
-const int butCount0 = 0;  // number of buttons
-const int butCount1 = 9;  // number of buttons
+const int butCount0 = 0;            // number of buttons on mcp0
+const int butCount1 = 9;            // number of buttons on mcp1
 const int butPins0[butCount0] = {};
 const int butPins1[butCount1] = { 2,3,4,5,6,7,8,9,10 };
 
@@ -181,66 +189,102 @@ void setup() {
 
 void intCallBack0() {
   awakenByInterrupt0 = true;
+  encSelect[0] = 0;
 }
 void intCallBack1() {
-  awakenByInterrupt1 = true;
+  awakenByInterrupt0 = true;
+  encSelect[0] = 1;
 }
 
 
-void handleInterrupt0() {
+void handleInterrupt() {
   // disable interrupts while handling them.
   detachInterrupt(arduinoInterrupt0);
   detachInterrupt(arduinoInterrupt1);
 
-  delay (debounce);  // de-bounce before we re-enable interrupts
+  //delay(debounce);  // de-bounce before we re-enable interrupts
 
   digitalWrite(led, !digitalRead(led));
   // check the encoders and buttons every 1 millis for debounce
+  
+  if (encSelect[0] == 0){
+    addr = addr0;
+    encseladd=0;
+    numbuttons=32;
+    //encSelect[0] = 0;
+  }  
+  else if (encSelect[0] == 1){
+    addr = addr1;
+    encseladd=5;
+    numbuttons=16;
+    //encSelect[0] = 1;
+  }
+  
+  
+  
+  if (expanderRead(INFTFA, addr))            // Read port values, as required. Note that this re-arms the interrupts.
+    {
+    keyValue0 &= 0x00FF;
+    keyValue0 |= expanderRead(INTCAPA, addr) << 8;    // read value at time of interrupt
+    }
+  if (expanderRead(INFTFB, addr))
+    {
+    keyValue0 &= 0xFF00;
+    keyValue0 |= expanderRead(INTCAPB, addr);        // port B is in low-order byte
+    }
 
-  // Read port values, as required. Note that this re-arms the interrupts.
-  if (expanderRead(INFTFA, addr0))
-    {
-    keyValue0 &= 0xFFFF00FF;
-    keyValue0 |= expanderRead(INTCAPA, addr0) << 8;    // read value at time of interrupt
-    }
-  if (expanderRead(INFTFB, addr0))
-    {
-    keyValue0 &= 0xFFFFFF00;
-    keyValue0 |= expanderRead(INTCAPB, addr0);        // port B is in low-order byte
-    }
-    
-  //Serial.print("MCP0 ");
-  //Serial.print(sizeof(long));
-  //Serial.print(keyValue0);
-  for (byte button = 0; button < 32; button++)
-    {
-    // this key down?
-    if (keyValue0 & (1 << button)) { //bitwyse keyvalue == binary value of button
-      //Serial.print ("1 ");
-      //Serial.print (round(button/2-0.01));
-      //encSelect[0] = button;
-      if ( button%2 == 0 ) {
-        //Serial.print("CW ");
-        encSelect[0] = 0;
-        encSelect[1] = 1;
-        encSelect[2] = round(button/2-0.01);
-        //encPos[encSelect[2]] ++;
-        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);
-        encPos[encSelect[2]] = 1;
-        break;
+  //Serial.println(keyValue0);
+  if (keyValue0 != 0){
+    //Serial.print("processing...: ");
+    for (byte button = 0; button < 32; button++){
+      // this key down?
+      if (keyValue0 & (1 << button)) { //bitwyse keyvalue == binary value of button
+        if ( button%2 == 0 ) {
+          //Serial.print("CW ");
+          //encSelect[1] = 1;
+          encSelect[1] = round(button/2-0.01) + encseladd;
+          //encPos[encSelect[2]] ++;                                                      //absolute
+          //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);       //absolute constrain
+          //encPos[encSelect[2]] = 1;                                                       //twos compiment
+          encValArray[0] = encValArray[1];
+          encValArray[1] = encValArray[2];
+          encValArray[2] = 1;                                                              // shift array and append 1
+          //for(int i = 0; i < 3; i++){
+          //  Serial.print(encValArray[i]);
+          //}
+          
+          break;
+        } else {
+          //Serial.print("CCW ");
+          //encSelect[1] = 2;
+          encSelect[1] = round(button/2-0.01) + encseladd;
+          //encPos[encSelect[2]] --;                                                      //absolute
+          //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);       //absolute boundaries
+          //encPos[encSelect[2]] = 127;                                                   //twos compiment
+          encValArray[0] = encValArray[1];
+          encValArray[1] = encValArray[2];
+          encValArray[2] = 127;                                                              //shift array and append 127
+          //for(int i = 0; i < 3; i++){
+          //  Serial.print(encValArray[i]);
+          //}
+            //print(encValArray);
+          break;
+        }
       } else {
-        //Serial.print("CCW ");
-        encSelect[0] = 0;
-        encSelect[1] = 2;
-        encSelect[2] = round(button/2-0.01);
-        //encPos[encSelect[2]] --;
-        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);
-        encPos[encSelect[2]] = 127;
-        break;
-      }
-    } else {
+      
+      } // end of for each button
+    }
+  } else {
+    decodeData();                                           // check data on every 4th interrupt. IDK why but the 4th interrupt has no value: keyValue = 0
+    handleMidi();
+
+    for(int i = 0; i < 3; i++){
+      encValArray[i] = 0;
+      //encValArray[i] = 0;
+    }
     
-    } // end of for each button
+
+    
   }
   
  
@@ -252,73 +296,35 @@ void handleInterrupt0() {
 }
 
 
-void handleInterrupt1() {
-  // disable interrupts while handling them.
-  detachInterrupt(arduinoInterrupt0);
-  detachInterrupt(arduinoInterrupt1);
+void decodeData(){
+  encCWArrayComp = true;
+  encCCWArrayComp = true;
 
-  delay (debounce);  // de-bounce before we re-enable interrupts
-
-  digitalWrite(led, !digitalRead(led));
-  // check the encoders and buttons every 1 millis for debounce
-
-  // Read port values, as required. Note that this re-arms the interrupts.
-  if (expanderRead(INFTFA, addr1))
-    {
-    keyValue1 &= 0xFFFF00FF;
-    keyValue1 |= expanderRead(INTCAPA, addr1) << 8;    // read value at time of interrupt
+  for (int i = 0;  i < 3; i++) {
+    if( encValArray[i] != encCWArray[i] ) {
+      //Serial.println("not equal");
+      encCWArrayComp = false;
+      break;
     }
-  if (expanderRead(INFTFB, addr1))
-    {
-    keyValue1 &= 0xFFFFFF00;
-    keyValue1 |= expanderRead(INTCAPB, addr1);        // port B is in low-order byte
-    }
-
-
-    
-  //Serial.print("MCP1 ");
-  //Serial.print(sizeof(long));
-  //Serial.print(keyValue1);
-  //uint8_t encPos[2];
-  for (byte button = 0; button < 16; button++)
-    {
-    // this key down?
-    if (keyValue1 & (1 << button)) { //bitwyse keyvalue == binary value of button
-      //Serial.print ("1 ");
-      //Serial.print (round(button/2-0.01)+8);
-      
-      if ( button%2 == 0 ) {
-        //Serial.print("CW ");
-        encSelect[0] = 1;
-        encSelect[1] = 1;
-        encSelect[2] = round(button/2-0.01)+5;
-        //encPos[encSelect[2]] ++;                                                            //absolute
-        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);             //absolute constrain
-        encPos[encSelect[2]] = 1;                                                            //twos compiment
-        break;
-      } else {
-        //Serial.print("CCW ");
-        encSelect[0] = 1;
-        encSelect[1] = 2;
-        encSelect[2] = round(button/2-0.01)+5;
-        //encPos[encSelect[2]] --;                                                             //absolute
-        //encPos[encSelect[2]] = constrain(encPos[encSelect[2]], minval, maxval);              //absolute boundaries
-        encPos[encSelect[2]] = 127;                                                             //twos compliment
-        break;
-      }
-    } else {
-    
-    }
-    
-    // end of for each button
   }
 
-  cleanInterrupts();
-  keyValue1 = 0;
-  
-  attachInterrupt(arduinoInterrupt0, intCallBack0, FALLING);
-  attachInterrupt(arduinoInterrupt1, intCallBack1, FALLING);
+  for (int i = 0;  i < 3; i++) {
+    if( encValArray[i] != encCCWArray[i] ) {
+      //Serial.println("not equal");
+      encCCWArrayComp = false;
+      break;
+    }
+  }
+
+  if (encCWArrayComp == true) {
+    //Serial.print("## CW ##################################");
+    encSelect[2] = 1;
+  } else if (encCCWArrayComp == true){
+    //Serial.print("## CCW ---------------------------------");
+    encSelect[2] = 127;
+  } 
 }
+
 
 
 void cleanInterrupts() {
@@ -329,7 +335,7 @@ void cleanInterrupts() {
 
 
 void handleMidi() {
-  controlChange(1, encSelect[2], encPos[encSelect[2]]);
+  controlChange(1, encSelect[1], encSelect[2]);
   MidiUSB.flush();
 }
   
@@ -337,18 +343,11 @@ void handleMidi() {
 
 void loop() {
   if (awakenByInterrupt0){
-    Serial.println("Interrupted0...");
-    handleInterrupt0();
-    handleMidi();
-    //Serial.print(encSelect[2]);
-    //Serial.print("  ");
-    //Serial.println(encPos[encSelect[2]]);
-    //Serial.println("Handled");
-  }
-  if (awakenByInterrupt1){
-    Serial.println("Interrupted1...");
-    handleInterrupt1();
-    handleMidi();
+    //Serial.println("Interrupted...");
+    handleInterrupt();
+    
+    //handleMidi();
+    //Serial.println();
     //Serial.print(encSelect[2]);
     //Serial.print("  ");
     //Serial.println(encPos[encSelect[2]]);
