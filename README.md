@@ -29,7 +29,7 @@ Lighroom uses the MIDI2LR Plug-in
 
 ### Wiring Example
 
-(todo)
+![](Images/Wiring9encoders.png)
 
 ## Goals
 This is the list of future changes:
