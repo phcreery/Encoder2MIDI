@@ -9,15 +9,6 @@ This is created to use several rotary encoders as contoller knobs to adjust ligh
 
 Rotary Encoder/Button > Arduino > MIDI signal over USB > MIDI2LR Plugin > Lightroom
 
-### Hardware
-
-Tested:
- - Arduino Pro Micro
-
-Should Work:
- - Arduino Leonardo
- - Atmega 32U4 based microcontroller
-
 ### Prerequisites
 
 Used Libraries
@@ -27,9 +18,22 @@ Used Libraries
 Lighroom uses the MIDI2LR Plug-in
  - https://rsjaffe.github.io/MIDI2LR/
 
-### Wiring Example
+### Hardware
+
+Tested:
+ - Arduino Pro Micro
+
+Should Work:
+ - Arduino Leonardo
+ - Atmega 32U4 based microcontroller
+
+Schematics & PCB: https://easyeda.com/phcreery/lightroom-controller
+
+#### Wiring Example
 
 ![](Images/Wiring9encoders.png)
+
+
 
 ## Goals
 This is the list of future changes:
