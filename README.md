@@ -29,6 +29,9 @@ Should Work:
 
 Schematics & PCB: https://easyeda.com/phcreery/lightroom-controller
 
+![](Images/continous-cropped.gif)
+
+
 #### Wiring Example
 
 ![](Images/Wiring9encoders.png)
