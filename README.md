@@ -17,6 +17,7 @@ Used Libraries
 
 Lighroom uses the MIDI2LR Plug-in
  - https://rsjaffe.github.io/MIDI2LR/
+ - MIDI2LR.xml is a pre-made preset for MIDI2LR
 
 ### Hardware
 
