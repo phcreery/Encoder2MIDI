@@ -34,7 +34,7 @@ Schematics & PCB: https://easyeda.com/phcreery/lightroom-controller
 
 #### Wiring Example
 
-![](Images/Wiring9encoders.png)
+![](Images/Schematic.png)
 
 
 
@@ -42,11 +42,12 @@ Schematics & PCB: https://easyeda.com/phcreery/lightroom-controller
 This is the list of future changes:
 
  - [X] Send MIDI commands
- - [ ] Clean Up code to smooth adaptivity (ex. allow more than 2 MCP devices and more encoders)
+ - [X] Clean Up code to smooth adaptivity (ex. allow more than 2 MCP devices and more encoders)
  - [x] Use interrupts instead of pooling. This will allow smoother input and less power usage
- - [ ] Bottons - Short, Long, Double, Press & Turn.
- - [ ] LEDs
- - [ ] Banks/Modes
+ - [X] Bottons - Short
+ - [ ] Bottons - Long, Double, Press & Turn.
+ - [X] LEDs
+ - [X] Banks/Modes
 
 
 
