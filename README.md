@@ -48,6 +48,7 @@ This is the list of future changes:
  - [ ] Bottons - Long, Double, Press & Turn.
  - [X] LEDs
  - [X] Banks/Modes
+ - [ ] Multi-Encoder Rotation.
 
 
 
