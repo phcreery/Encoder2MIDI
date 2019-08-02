@@ -7,7 +7,7 @@ This is created to use several rotary encoders as contoller knobs to adjust ligh
 
 ### How it works
 
-Rotary Encoder/Button > Arduino > MIDI signal over USB > MIDI2LR Plugin > Lightroom
+Rotary Encoder/Button > MCP32017 I/O Expander > I2C > Arduino > MIDI signal over USB > MIDI2LR Plugin > Lightroom
 
 ### Prerequisites
 
